@@ -1,0 +1,57 @@
+name: Check Python Packages on ubuntu-latest
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+  push:
+    branches:
+      - github_action_3  # Trigger on push to this branch
+
+jobs:
+  check-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Ubuntu version
+        run: |
+          echo "=== Ubuntu Version ==="
+          cat /etc/os-release
+          echo ""
+          lsb_release -a
+
+      - name: Check if python3-dev is installed (using apt)
+        run: |
+          echo "=== Checking python3-dev package with apt ==="
+          apt list --installed 2>/dev/null | grep python3-dev || echo "❌ python3-dev is NOT installed"
+
+      - name: Check if python3-config exists
+        run: |
+          echo "=== Checking python3-config command ==="
+          if command -v python3-config >/dev/null 2>&1; then
+            echo "✅ python3-config command EXISTS"
+            which python3-config
+            python3-config --help || true
+          else
+            echo "❌ python3-config command does NOT exist"
+          fi
+
+      - name: List all Python-related packages (using apt)
+        run: |
+          echo "=== All installed Python-related packages ==="
+          apt list --installed 2>/dev/null | grep python
+
+      - name: Search for Python development files
+        run: |
+          echo "=== Searching for Python.h header file ==="
+          find /usr/include -name "Python.h" 2>/dev/null || echo "Python.h not found"
+
+      - name: Check Python interpreter
+        run: |
+          echo "=== Python interpreter info ==="
+          which python3
+          python3 --version
+          python3 -c "import sysconfig; print('Include path:', sysconfig.get_path('include'))"
+
+      - name: Try to run python3-config
+        run: |
+          echo "=== Attempting to run python3-config ==="
+          python3-config --cflags --embed || echo "Failed to run python3-config"
+          python3-config --ldflags --embed || echo "Failed to run python3-config"
